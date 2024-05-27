@@ -16,6 +16,7 @@ const goldText = document.querySelector("#goldText");
 const monsterStats = document.querySelector("#monsterStats");
 const monsterName = document.querySelector("#monsterName");
 const monsterHealthText = document.querySelector("#monsterHealth");
+const history = document.querySelector("#history");
 const weapons = [
   { name: "Палка", power: 5 },
   { name: "Кинжал", power: 30 },
@@ -75,6 +76,7 @@ const locations = [
     "button text": ["Атака", "Увернуться", "Сбежать"],
     "button functions": [attack, dodge, goTown],
     text: "Вы сражаетесь с монстром.",
+    color: "yellow",
   },
   {
     name: "Смерть монстра",
@@ -85,31 +87,39 @@ const locations = [
     ],
     "button functions": [goTown, goTown, easterEgg],
     text: 'Монстр кричит "Ааххрг!" и умирает. Вы Получили опыт и немного золота.',
+    color: "lime",
   },
   {
     name: "Проигрыш",
     "button text": ["ПОВТОР?", "ПОВТОР?", "ПОВТОР?"],
     "button functions": [restart, restart, restart],
     text: "Вы умерли. &#x2620;",
+    color: "red",
   },
   {
     name: "Победа",
     "button text": ["ПОВТОР?", "ПОВТОР?", "ПОВТОР?"],
     "button functions": [restart, restart, restart],
     text: "Вы одолели Дракона! ВЫ ПОБЕДИЛИ! &#x1F389;",
+    color: "lime",
   },
   {
     name: "Пасхалка",
     "button text": ["2", "8", "Вернуться на городскую площадь."],
     "button functions": [pickTwo, pickEight, goTown],
     text: "Вы нашли секретную игру. Выберите номер выше. Десять чисел определяться случайно. Если среди них будет Ваше число, Вы выиграли!",
+    color: "magenta",
   },
 ];
 
-// initialize buttons
 button1.onclick = goStore;
 button2.onclick = goCave;
 button3.onclick = fightDragon;
+
+function updateHistory(text, color) {
+  history.innerHTML += `<br><span style='color:${color}'>${text}</span>`;
+  history.scrollTop = history.scrollHeight;
+}
 
 function update(location) {
   monsterStats.style.display = "none";
@@ -120,6 +130,7 @@ function update(location) {
   button2.onclick = location["button functions"][1];
   button3.onclick = location["button functions"][2];
   text.innerHTML = location.text;
+  updateHistory(location.text, location.color);
 }
 
 function goTown() {
@@ -142,6 +153,7 @@ function buyHealth() {
     healthText.innerText = health;
   } else {
     text.innerText = "У Вас нет достаточно золота чтобы купить здоровье";
+    updateHistory(text.innerText, "red");
   }
 }
 
@@ -155,11 +167,14 @@ function buyWeapon() {
       text.innerText = "Теперь у Вас " + newWeapon + ".";
       inventory.push(newWeapon);
       text.innerText += " В Вашем инвентаре есть: " + inventory;
+      updateHistory(text.innerText, "lime");
     } else {
       text.innerText = "У Вас нет достаточно золота чтобы купить оружие.";
+      updateHistory(text.innerText, "red");
     }
   } else {
     text.innerText = "У Вас уже есть самое мощное оружие!";
+    updateHistory(text.innerText, "yellow");
     button2.innerText = "Продать оружие за 15 золотых";
     button2.onclick = sellWeapon;
   }
@@ -172,8 +187,10 @@ function sellWeapon() {
     let currentWeapon = inventory.shift();
     text.innerText = "Вы продали " + currentWeapon + ".";
     text.innerText += " В Вашем инвентаре есть: " + inventory;
+    updateHistory(text.innerText);
   } else {
     text.innerText = "Не продавайте Ваше единственное оружие!";
+    updateHistory(text.innerText, "red");
   }
 }
 
@@ -205,11 +222,13 @@ function attack() {
   text.innerText +=
     " Вы атаковали монстра используя " + weapons[currentWeapon].name + ".";
   health -= getMonsterAttackValue(monsters[fighting].level);
+  updateHistory(text.innerText, "yellow");
   if (isMonsterHit()) {
     monsterHealth -=
       weapons[currentWeapon].power + Math.floor(Math.random() * xp) + 1;
   } else {
     text.innerText += " Вы промахнулись.";
+    updateHistory(text.innerText, "red");
   }
   healthText.innerText = health;
   monsterHealthText.innerText = monsterHealth;
@@ -224,13 +243,13 @@ function attack() {
   }
   if (Math.random() <= 0.1 && inventory.length !== 1) {
     text.innerText += " Ваш " + inventory.pop() + " сломался.";
+    updateHistory(text.innerText, "red");
     currentWeapon--;
   }
 }
 
 function getMonsterAttackValue(level) {
   const hit = level * 5 - Math.floor(Math.random() * xp);
-  console.log(hit);
   return hit > 0 ? hit : 0;
 }
 
@@ -240,6 +259,7 @@ function isMonsterHit() {
 
 function dodge() {
   text.innerText = "Вы увернулись от атаки: " + monsters[fighting].name;
+  updateHistory(text.innerText, "lime");
 }
 
 function defeatMonster() {
@@ -291,12 +311,15 @@ function pick(guess) {
   for (let i = 0; i < 10; i++) {
     text.innerText += numbers[i] + "\n";
   }
+  updateHistory(text.innerText);
   if (numbers.includes(guess)) {
     text.innerText += "Верно! Вот Ваши 20 золотых!";
+    updateHistory(text.innerText, "lime");
     gold += 20;
     goldText.innerText = gold;
   } else {
     text.innerText += "Не верно! Вы потеряли 10 здоровья";
+    updateHistory(text.innerText, "red");
     health -= 10;
     healthText.innerText = health;
     if (health <= 0) {
